@@ -14,7 +14,7 @@
 ## What Nick has to do by hand
 
 ### Before anything else
-1. **Final name:** the name is on hold for the attorney check. Set `MASCOT_NAME` in `src/brand.ts`, then update the static names listed in the README. Apple's app name must be unique.
+1. **Final name:** Fizby is chosen and already set everywhere (`src/brand.ts`, Info.plist, capacitor.config.json, the pages). Apple's app name must be unique, so confirm it is free when you create the app in step 4.
 2. **Support email:** done. `nickrhigh@yahoo.com` is on `support.html` and `privacy.html`; use it as the App Store Connect support contact too.
 
 ### Apple Developer and App Store Connect

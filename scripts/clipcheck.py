@@ -1,7 +1,7 @@
 """Objective clip checks shared by pad-voice.py and check-clips.py (no listening needed).
 lead/trail silence 30-80 ms (below -50 dBFS); natural edges (first/last 10 ms of speech >= 12 dB under the loudest 50 ms);
-a single speech island (no burst >= 180 ms away = no leftover carrier sound); Whisper hears exactly the line; loudness within 3 LU of the median."""
-import subprocess, json, numpy as np
+at most one speech island per sentence of the line (an extra burst >= 180 ms away = leftover carrier sound); Whisper hears exactly the line; loudness within 3 LU of the median."""
+import subprocess, json, re, numpy as np
 def load(p, sr=16000):
     r = subprocess.run(['ffmpeg', '-v', 'error', '-i', p, '-ac', '1', '-ar', str(sr), '-f', 'f32le', '-'], capture_output=True); return np.frombuffer(r.stdout, np.float32)
 def lufs(p):
@@ -21,7 +21,7 @@ def check(p, text, med, asr, words):
             else: isl.append([i, i])
     heard = asr(y.copy())['text'].strip(); L = lufs(p)
     c = dict(lead=lead, trail=trail, edge_in=round(e0, 1), edge_out=round(e1, 1), islands=len(isl), lufs=L, heard=heard)
-    c['bad'] = [k for k, ok in [('padding', 30 <= lead <= 80 and 30 <= trail <= 80), ('cut-in', e0 <= -12), ('cut-out', e1 <= -12), ('carrier', len(isl) == 1), ('asr', words(heard) == words(text)), ('loudness', abs(L - med) <= 3)] if not ok]
+    c['bad'] = [k for k, ok in [('padding', 30 <= lead <= 80 and 30 <= trail <= 80), ('cut-in', e0 <= -12), ('cut-out', e1 <= -12), ('carrier', len(isl) <= max(1, len([x for x in re.split(r'[.!?]+', text) if x.strip()]))), ('asr', words(heard) == words(text)), ('loudness', abs(L - med) <= 3)] if not ok]
     return c
 def gap_cut(y, sr, a, b, nxt_prev=None):
     """Move the Whisper word bounds out to the middle of the real pauses around the word: walk back from a (forward from b)

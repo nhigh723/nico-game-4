@@ -22,7 +22,8 @@ from transformers import pipeline; from resemblyzer import VoiceEncoder, preproc
 asr = pipeline('automatic-speech-recognition', model='openai/whisper-small.en'); enc = VoiceEncoder('cpu'); C = np.load('/workspace/tts/qclone/pack_centroid.npy')
 td = f'{G}/voice/padtakes'; gate = json.load(open(f'{td}/gate.json')); recf = f'{G}/voice/clones.json'; rec = json.load(open(recf)) if os.path.exists(recf) else {}
 sys.path.insert(0, f'{G}/scripts'); from clipcheck import check, gap_cut, lufs, repad
-MED = float(np.median([lufs(f'{G}/public/voice/{f}') for h0, f in man.items() if not rec.get(h0, {}).get('padded')]))
+_ref = [lufs(f'{G}/public/voice/{f}') for h0, f in man.items() if not rec.get(h0, {}).get('padded')]
+MED = float(np.median(_ref)) if _ref else -16.0  # no unpadded clips (game 4): compare with the -16 LUFS export target
 PAD = PRE + ' ' + '{}' + ' ' + POST; added, failed, report = 0, [], {}
 for h, text in miss:
     cands = sorted(((g['sim'], k) for k, g in gate.items() if k.split('~')[0] == h and g['sim'] >= 0.84 and wer(PAD.format(text), g['heard']) == 0), reverse=True)
